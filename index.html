@@ -67,6 +67,17 @@
     margin-left: 4px;
     letter-spacing: 0;
   }
+  .version-badge {
+    font-size: 10px;
+    background: var(--primary-light);
+    color: var(--primary);
+    padding: 1px 8px;
+    border-radius: 100px;
+    font-weight: 600;
+    margin-left: 6px;
+    vertical-align: middle;
+    -webkit-text-fill-color: var(--primary);
+  }
 
   .container {
     max-width: 640px;
@@ -199,16 +210,26 @@
   .center-btn .icon { font-size: 20px; }
   .center-btn .label { font-size: 11px; font-weight: 500; opacity: 0.9; }
 
+  /* Food list with weight indicators */
   .food-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 12px 8px;
     justify-content: center;
     margin-top: 20px;
     padding-top: 18px;
     border-top: 1px solid #F5E6D8;
   }
+  .food-item-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
   .food-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     background: var(--primary-light);
     color: var(--primary-dark);
     font-size: 13px;
@@ -217,6 +238,7 @@
     font-weight: 500;
     transition: all 0.2s;
     border: 1px solid transparent;
+    cursor: default;
   }
   .food-item.highlight {
     background: var(--primary);
@@ -228,11 +250,118 @@
   .food-item .num {
     font-size: 11px;
     opacity: 0.6;
-    margin-right: 4px;
+    margin-right: 2px;
     font-weight: 400;
   }
   .food-item.highlight .num { opacity: 0.8; }
+  .food-item .weight-label {
+    font-size: 10px;
+    opacity: 0.5;
+    margin-left: 2px;
+  }
+  .food-item.highlight .weight-label { opacity: 0.7; }
+  .weight-bar {
+    width: 60px;
+    height: 3px;
+    background: #F0E0D6;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .weight-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    border-radius: 4px;
+    transition: width 0.5s ease;
+  }
 
+  /* History */
+  .history-section {
+    margin-top: 20px;
+    width: 100%;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px 20px;
+    border: 1px solid rgba(255, 106, 0, 0.06);
+  }
+  .history-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+  }
+  .history-header h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .history-header .badge {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 400;
+  }
+  .history-header .right-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .history-header .arrow {
+    font-size: 12px;
+    color: var(--text-secondary);
+    transition: transform 0.3s;
+  }
+  .history-header .arrow.open { transform: rotate(180deg); }
+  .clear-btn {
+    font-size: 11px;
+    color: #999;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: 100px;
+    transition: all 0.2s;
+  }
+  .clear-btn:hover { background: #F5F5F5; color: #E74C3C; }
+  .history-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+  }
+  .history-body.open { max-height: 600px; }
+  .history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 4px 0;
+    margin-top: 8px;
+  }
+  .history-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: #FFFAF5;
+    font-size: 13px;
+    transition: background 0.2s;
+  }
+  .history-item:hover { background: var(--primary-light); }
+  .history-item .h-emoji { font-size: 18px; }
+  .history-item .h-name { font-weight: 600; color: var(--text); flex: 1; }
+  .history-item .h-time { font-size: 11px; color: #BBA99A; }
+  .history-empty {
+    text-align: center;
+    padding: 24px 0;
+    color: #CCC;
+    font-size: 13px;
+  }
+  .history-empty .empty-icon { font-size: 28px; display: block; margin-bottom: 6px; }
+
+  /* Modal */
   .modal-overlay {
     position: fixed;
     inset: 0;
@@ -310,6 +439,7 @@
   }
   .modal .btn-secondary:hover { background: #EBEBEB; }
 
+  /* Confetti */
   .confetti-container {
     position: fixed;
     inset: 0;
@@ -345,7 +475,9 @@
     .center-btn .label { font-size: 10px; }
     .modal { padding: 32px 24px 28px; }
     .modal .result-name { font-size: 28px; }
-    .food-item { font-size: 12px; padding: 4px 12px; }
+    .food-item { font-size: 12px; padding: 4px 10px; }
+    .weight-bar { width: 44px; }
+    .history-item { font-size: 12px; padding: 6px 10px; }
   }
 </style>
 </head>
@@ -353,7 +485,7 @@
 
 <div class="header">
   <div class="header-icon">🍜</div>
-  <h1>今天吃什么 <span class="subtitle">× 美团美食</span></h1>
+  <h1>今天吃什么 <span class="subtitle">× 美团美食</span><span class="version-badge">v1.1.0</span></h1>
 </div>
 
 <div class="container">
@@ -373,6 +505,20 @@
       </button>
     </div>
     <div class="food-list" id="foodList"></div>
+  </div>
+
+  <!-- History -->
+  <div class="history-section">
+    <div class="history-header" onclick="toggleHistory()">
+      <h3>📋 抽奖记录 <span class="badge" id="historyCount">0 次</span></h3>
+      <div class="right-group">
+        <button class="clear-btn" onclick="event.stopPropagation(); clearHistory();">清空</button>
+        <span class="arrow" id="historyArrow">▾</span>
+      </div>
+    </div>
+    <div class="history-body" id="historyBody">
+      <div class="history-list" id="historyList"></div>
+    </div>
   </div>
 </div>
 
@@ -395,26 +541,26 @@
 
 <script>
 const MEITUAN_FOOD_BANK = [
-  { name: '火锅', emoji: '🫕', color: '#FF4444' },
-  { name: '烧烤', emoji: '🍖', color: '#FF6B35' },
-  { name: '奶茶', emoji: '🧋', color: '#D4A574' },
-  { name: '酸菜鱼', emoji: '🐟', color: '#4CAF50' },
-  { name: '小龙虾', emoji: '🦞', color: '#FF4757' },
-  { name: '炸鸡', emoji: '🍗', color: '#FFA502' },
-  { name: '麻辣烫', emoji: '🌶️', color: '#E74C3C' },
-  { name: '寿司', emoji: '🍣', color: '#2ED573' },
-  { name: '披萨', emoji: '🍕', color: '#FF6348' },
-  { name: '汉堡', emoji: '🍔', color: '#E67E22' },
-  { name: '川菜', emoji: '🌶️', color: '#C0392B' },
-  { name: '粤菜', emoji: '🥟', color: '#27AE60' },
-  { name: '日料', emoji: '🍱', color: '#E84393' },
-  { name: '韩餐', emoji: '🍜', color: '#6C5CE7' },
-  { name: '甜品', emoji: '🍰', color: '#FD79A8' },
-  { name: '咖啡', emoji: '☕', color: '#8B4513' },
-  { name: '螺蛳粉', emoji: '🍜', color: '#A0522D' },
-  { name: '烤鸭', emoji: '🦆', color: '#CD5C1C' },
-  { name: '牛肉面', emoji: '🍜', color: '#8B0000' },
-  { name: '炒饭', emoji: '🍚', color: '#DAA520' },
+  { name: '火锅', emoji: '🫕', color: '#FF4444', baseWeight: 1.0 },
+  { name: '烧烤', emoji: '🍖', color: '#FF6B35', baseWeight: 1.0 },
+  { name: '奶茶', emoji: '🧋', color: '#D4A574', baseWeight: 1.0 },
+  { name: '酸菜鱼', emoji: '🐟', color: '#4CAF50', baseWeight: 1.0 },
+  { name: '小龙虾', emoji: '🦞', color: '#FF4757', baseWeight: 1.0 },
+  { name: '炸鸡', emoji: '🍗', color: '#FFA502', baseWeight: 1.0 },
+  { name: '麻辣烫', emoji: '🌶️', color: '#E74C3C', baseWeight: 1.0 },
+  { name: '寿司', emoji: '🍣', color: '#2ED573', baseWeight: 1.0 },
+  { name: '披萨', emoji: '🍕', color: '#FF6348', baseWeight: 1.0 },
+  { name: '汉堡', emoji: '🍔', color: '#E67E22', baseWeight: 1.0 },
+  { name: '川菜', emoji: '🌶️', color: '#C0392B', baseWeight: 1.0 },
+  { name: '粤菜', emoji: '🥟', color: '#27AE60', baseWeight: 1.0 },
+  { name: '日料', emoji: '🍱', color: '#E84393', baseWeight: 1.0 },
+  { name: '韩餐', emoji: '🍜', color: '#6C5CE7', baseWeight: 1.0 },
+  { name: '甜品', emoji: '🍰', color: '#FD79A8', baseWeight: 1.0 },
+  { name: '咖啡', emoji: '☕', color: '#8B4513', baseWeight: 1.0 },
+  { name: '螺蛳粉', emoji: '🍜', color: '#A0522D', baseWeight: 1.0 },
+  { name: '烤鸭', emoji: '🦆', color: '#CD5C1C', baseWeight: 1.0 },
+  { name: '牛肉面', emoji: '🍜', color: '#8B0000', baseWeight: 1.0 },
+  { name: '炒饭', emoji: '🍚', color: '#DAA520', baseWeight: 1.0 },
 ];
 
 const SEGMENT_COLORS = [
@@ -429,21 +575,40 @@ let currentFoods = [];
 let isSpinning = false;
 let currentRotation = 0;
 let canvas, ctx;
-
-function shuffleArray(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
+let historyOpen = false;
 
 function getRandomFoods(count) {
-  const shuffled = shuffleArray([...MEITUAN_FOOD_BANK]);
+  const shuffled = [...MEITUAN_FOOD_BANK];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
   return shuffled.slice(0, count).map((item, i) => ({
     ...item,
+    weight: item.baseWeight,
     color: SEGMENT_COLORS[i % SEGMENT_COLORS.length],
   }));
+}
+
+// Weighted random selection
+function weightedRandomIndex() {
+  const totalWeight = currentFoods.reduce((sum, f) => sum + f.weight, 0);
+  let rand = Math.random() * totalWeight;
+  for (let i = 0; i < currentFoods.length; i++) {
+    rand -= currentFoods[i].weight;
+    if (rand <= 0) return i;
+  }
+  return currentFoods.length - 1;
+}
+
+function adjustWeights(pickedIndex) {
+  currentFoods.forEach((f, i) => {
+    if (i === pickedIndex) {
+      f.weight = Math.max(0.1, +(f.weight - 0.3).toFixed(2));
+    } else {
+      f.weight = Math.min(1.5, +(f.weight + 0.05).toFixed(2));
+    }
+  });
 }
 
 function drawWheel(rotation) {
@@ -458,7 +623,6 @@ function drawWheel(rotation) {
   const n = currentFoods.length;
   const arc = (2 * Math.PI) / n;
 
-  // Outer ring shadow
   ctx.save();
   ctx.beginPath();
   ctx.arc(cx, cy, r + 4, 0, 2 * Math.PI);
@@ -466,7 +630,6 @@ function drawWheel(rotation) {
   ctx.fill();
   ctx.restore();
 
-  // Draw segments
   for (let i = 0; i < n; i++) {
     const startAngle = rotation + i * arc;
     const endAngle = startAngle + arc;
@@ -483,13 +646,11 @@ function drawWheel(rotation) {
     gradient.addColorStop(1, baseColor);
     ctx.fillStyle = gradient;
     ctx.fill();
-
     ctx.strokeStyle = 'rgba(255,255,255,0.4)';
     ctx.lineWidth = 1.5;
     ctx.stroke();
     ctx.restore();
 
-    // Draw text
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(startAngle + arc / 2);
@@ -503,17 +664,14 @@ function drawWheel(rotation) {
     ctx.shadowBlur = 3;
     ctx.fillText(currentFoods[i].name, textR, 0);
 
-    // Emoji
     ctx.font = `${Math.min(24, 320 / n)}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.shadowBlur = 0;
     const emojiR = r * 0.28;
     ctx.fillText(currentFoods[i].emoji, emojiR, 0);
-
     ctx.restore();
   }
 
-  // Center circle decoration
   ctx.save();
   ctx.beginPath();
   ctx.arc(cx, cy, r * 0.12, 0, 2 * Math.PI);
@@ -527,7 +685,6 @@ function drawWheel(rotation) {
   ctx.stroke();
   ctx.restore();
 
-  // Outer ring
   ctx.save();
   ctx.beginPath();
   ctx.arc(cx, cy, r + 1, 0, 2 * Math.PI);
@@ -548,9 +705,11 @@ function lightenColor(hex, percent) {
 
 function updateFoodList() {
   const container = document.getElementById('foodList');
-  container.innerHTML = currentFoods.map((f, i) =>
-    `<span class="food-item" data-index="${i}"><span class="num">#${i + 1}</span>${f.emoji} ${f.name}</span>`
-  ).join('');
+  const maxWeight = Math.max(...currentFoods.map(f => f.weight), 0.1);
+  container.innerHTML = currentFoods.map((f, i) => {
+    const pct = Math.round((f.weight / maxWeight) * 100);
+    return `<span class="food-item-wrap"><span class="food-item" data-index="${i}"><span class="num">#${i + 1}</span>${f.emoji} ${f.name}<span class="weight-label">${(f.weight * 100).toFixed(0)}%</span></span><span class="weight-bar"><span class="weight-bar-fill" style="width:${pct}%"></span></span></span>`;
+  }).join('');
 }
 
 function highlightFood(index) {
@@ -561,14 +720,6 @@ function highlightFood(index) {
   }
 }
 
-function initWheel() {
-  canvas = document.getElementById('wheelCanvas');
-  ctx = canvas.getContext('2d');
-  currentFoods = getRandomFoods(10);
-  updateFoodList();
-  drawWheel(0);
-}
-
 function spin() {
   if (isSpinning) return;
   isSpinning = true;
@@ -577,7 +728,7 @@ function spin() {
   const n = currentFoods.length;
   const arc = (2 * Math.PI) / n;
 
-  const targetIndex = Math.floor(Math.random() * n);
+  const targetIndex = weightedRandomIndex();
   const targetAngle = (2 * Math.PI) - (targetIndex * arc) - (arc / 2);
   const extraSpins = 4 + Math.floor(Math.random() * 4);
   const totalRotation = extraSpins * 2 * Math.PI + targetAngle - (currentRotation % (2 * Math.PI));
@@ -610,11 +761,14 @@ function spin() {
 
 function showResult(index) {
   const food = currentFoods[index];
+  adjustWeights(index);
   document.getElementById('resultEmoji').textContent = food.emoji;
   document.getElementById('resultName').textContent = food.name;
   document.getElementById('modal').classList.add('show');
   highlightFood(index);
+  updateFoodList();
   launchConfetti();
+  saveHistory(food.name, food.emoji);
 }
 
 function closeModal() {
@@ -675,6 +829,63 @@ function refreshFoods() {
 
   document.getElementById('sourceText').textContent =
     `已刷新热门美食推荐 ${new Date().toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'})}`;
+}
+
+// History
+function getHistory() {
+  try { return JSON.parse(localStorage.getItem('foodWheelHistory') || '[]'); }
+  catch { return []; }
+}
+
+function saveHistory(name, emoji) {
+  const history = getHistory();
+  history.unshift({ name, emoji, time: Date.now() });
+  if (history.length > 50) history.length = 50;
+  localStorage.setItem('foodWheelHistory', JSON.stringify(history));
+  renderHistory();
+}
+
+function clearHistory() {
+  if (!confirm('确定清空所有抽奖记录吗？')) return;
+  localStorage.removeItem('foodWheelHistory');
+  renderHistory();
+}
+
+function renderHistory() {
+  const history = getHistory();
+  const countEl = document.getElementById('historyCount');
+  const listEl = document.getElementById('historyList');
+  countEl.textContent = `${history.length} 次`;
+  if (history.length === 0) {
+    listEl.innerHTML = `<div class="history-empty"><span class="empty-icon">🎯</span>还没有抽奖记录，来转一次吧！</div>`;
+    return;
+  }
+  listEl.innerHTML = history.map(h => {
+    const d = new Date(h.time);
+    const dateStr = `${d.getMonth() + 1}/${d.getDate()}`;
+    const timeStr = d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+    return `<div class="history-item"><span class="h-emoji">${h.emoji}</span><span class="h-name">${h.name}</span><span class="h-time">${dateStr} ${timeStr}</span></div>`;
+  }).join('');
+}
+
+function toggleHistory() {
+  historyOpen = !historyOpen;
+  document.getElementById('historyBody').classList.toggle('open', historyOpen);
+  document.getElementById('historyArrow').classList.toggle('open', historyOpen);
+}
+
+function initWheel() {
+  canvas = document.getElementById('wheelCanvas');
+  ctx = canvas.getContext('2d');
+  currentFoods = getRandomFoods(10);
+  updateFoodList();
+  drawWheel(0);
+  renderHistory();
+  if (getHistory().length > 0) {
+    historyOpen = true;
+    document.getElementById('historyBody').classList.add('open');
+    document.getElementById('historyArrow').classList.add('open');
+  }
 }
 
 document.addEventListener('DOMContentLoaded', initWheel);
