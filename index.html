@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>今天吃什么 - 美食转盘</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  :root {
+    --primary: #FF6A00;
+    --primary-dark: #E05E00;
+    --primary-light: #FFF0E0;
+    --accent: #FF5000;
+    --bg: #FFF8F0;
+    --card-bg: #FFFFFF;
+    --text: #333333;
+    --text-secondary: #666666;
+    --shadow: 0 8px 32px rgba(255, 106, 0, 0.12);
+    --radius: 16px;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif;
+    background: linear-gradient(135deg, #FFF8F0 0%, #FFE8D6 50%, #FFD6B3 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+  }
+
+  .header {
+    width: 100%;
+    padding: 20px 24px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .header-icon {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: white;
+    box-shadow: 0 4px 12px rgba(255, 106, 0, 0.3);
+  }
+  .header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 1px;
+  }
+  .header .subtitle {
+    font-size: 13px;
+    color: var(--text-secondary);
+    -webkit-text-fill-color: var(--text-secondary);
+    font-weight: 400;
+    margin-left: 4px;
+    letter-spacing: 0;
+  }
+
+  .container {
+    max-width: 640px;
+    width: 100%;
+    padding: 0 16px 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .source-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--card-bg);
+    padding: 10px 18px;
+    border-radius: 100px;
+    box-shadow: 0 2px 12px rgba(255, 106, 0, 0.08);
+    margin: 8px 0 20px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 106, 0, 0.1);
+  }
+  .source-bar .tag {
+    background: var(--primary-light);
+    color: var(--primary);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 100px;
+  }
+  .source-bar .refresh-btn {
+    background: none;
+    border: none;
+    color: var(--primary);
+    cursor: pointer;
+    font-size: 15px;
+    padding: 4px;
+    border-radius: 50%;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .source-bar .refresh-btn:hover { transform: rotate(180deg); background: var(--primary-light); }
+  .source-bar .refresh-btn:active { transform: rotate(360deg); }
+  .source-bar .refresh-btn.spinning { animation: spinBtn 0.8s linear infinite; }
+  @keyframes spinBtn { to { transform: rotate(360deg); } }
+
+  .wheel-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 28px 28px 24px;
+    width: 100%;
+    position: relative;
+    border: 1px solid rgba(255, 106, 0, 0.06);
+  }
+
+  .wheel-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .pointer {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    width: 0;
+    height: 0;
+    border-left: 16px solid transparent;
+    border-right: 16px solid transparent;
+    border-top: 28px solid var(--accent);
+    filter: drop-shadow(0 4px 6px rgba(255, 80, 0, 0.3));
+  }
+  .pointer::after {
+    content: '';
+    position: absolute;
+    top: -34px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 10px;
+    height: 10px;
+    background: var(--accent);
+    border-radius: 50%;
+  }
+
+  #wheelCanvas {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    cursor: pointer;
+    transition: box-shadow 0.3s;
+  }
+  #wheelCanvas:hover { box-shadow: 0 6px 30px rgba(255, 106, 0, 0.15); }
+
+  .center-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    z-index: 5;
+    box-shadow: 0 4px 16px rgba(255, 106, 0, 0.4);
+    transition: all 0.3s;
+    letter-spacing: 1px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.2;
+  }
+  .center-btn:hover { transform: translate(-50%, -50%) scale(1.05); box-shadow: 0 6px 24px rgba(255, 106, 0, 0.5); }
+  .center-btn:active { transform: translate(-50%, -50%) scale(0.95); }
+  .center-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: translate(-50%, -50%) scale(0.98); }
+  .center-btn .icon { font-size: 20px; }
+  .center-btn .label { font-size: 11px; font-weight: 500; opacity: 0.9; }
+
+  .food-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid #F5E6D8;
+  }
+  .food-item {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    font-size: 13px;
+    padding: 5px 14px;
+    border-radius: 100px;
+    font-weight: 500;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+  }
+  .food-item.highlight {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 2px 8px rgba(255, 106, 0, 0.3);
+    border-color: var(--primary);
+    transform: scale(1.05);
+  }
+  .food-item .num {
+    font-size: 11px;
+    opacity: 0.6;
+    margin-right: 4px;
+    font-weight: 400;
+  }
+  .food-item.highlight .num { opacity: 0.8; }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+  }
+  .modal-overlay.show { display: flex; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .modal {
+    background: white;
+    border-radius: 20px;
+    padding: 40px 36px 32px;
+    max-width: 380px;
+    width: 90%;
+    text-align: center;
+    position: relative;
+    animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+  @keyframes modalPop {
+    from { transform: scale(0.7); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .modal .emoji-big { font-size: 56px; margin-bottom: 12px; display: block; }
+  .modal h2 {
+    font-size: 20px;
+    color: var(--text);
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+  .modal .result-name {
+    font-size: 36px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 8px 0 16px;
+  }
+  .modal .result-hint {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+  }
+  .modal .btn-group {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+  }
+  .modal .btn {
+    padding: 12px 28px;
+    border-radius: 100px;
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .modal .btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: white;
+    box-shadow: 0 4px 14px rgba(255, 106, 0, 0.3);
+  }
+  .modal .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 106, 0, 0.4); }
+  .modal .btn-secondary {
+    background: #F5F5F5;
+    color: var(--text-secondary);
+  }
+  .modal .btn-secondary:hover { background: #EBEBEB; }
+
+  .confetti-container {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 101;
+    overflow: hidden;
+  }
+  .confetti-piece {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    top: -10px;
+    animation: confettiFall linear forwards;
+  }
+  @keyframes confettiFall {
+    to { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+
+  .footer {
+    width: 100%;
+    text-align: center;
+    padding: 20px;
+    font-size: 12px;
+    color: #BBA99A;
+    letter-spacing: 0.5px;
+  }
+
+  @media (max-width: 480px) {
+    .header h1 { font-size: 18px; }
+    .wheel-card { padding: 16px 16px 20px; }
+    .center-btn { width: 56px; height: 56px; font-size: 12px; }
+    .center-btn .icon { font-size: 16px; }
+    .center-btn .label { font-size: 10px; }
+    .modal { padding: 32px 24px 28px; }
+    .modal .result-name { font-size: 28px; }
+    .food-item { font-size: 12px; padding: 4px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">🍜</div>
+  <h1>今天吃什么 <span class="subtitle">× 美团美食</span></h1>
+</div>
+
+<div class="container">
+  <div class="source-bar">
+    <span class="tag">🔥 美团热榜</span>
+    <span id="sourceText">已加载热门美食推荐</span>
+    <button class="refresh-btn" id="refreshBtn" onclick="refreshFoods()" title="换一批热门美食">⟳</button>
+  </div>
+
+  <div class="wheel-card">
+    <div class="wheel-wrapper">
+      <div class="pointer"></div>
+      <canvas id="wheelCanvas" width="800" height="800"></canvas>
+      <button class="center-btn" id="spinBtn" onclick="spin()">
+        <span class="icon">🎲</span>
+        <span class="label">抽奖</span>
+      </button>
+    </div>
+    <div class="food-list" id="foodList"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <span class="emoji-big" id="resultEmoji">🎉</span>
+    <h2>今日推荐</h2>
+    <div class="result-name" id="resultName"></div>
+    <div class="result-hint">不如就吃这个吧！🍽️</div>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="closeModal(); spin();">再来一次</button>
+      <button class="btn btn-secondary" onclick="closeModal();">好的</button>
+    </div>
+  </div>
+</div>
+
+<div class="confetti-container" id="confettiContainer"></div>
+
+<div class="footer">美食数据参考美团热门分类 · 每天纠结吃什么，交给转盘就好</div>
+
+<script>
+const MEITUAN_FOOD_BANK = [
+  { name: '火锅', emoji: '🫕', color: '#FF4444' },
+  { name: '烧烤', emoji: '🍖', color: '#FF6B35' },
+  { name: '奶茶', emoji: '🧋', color: '#D4A574' },
+  { name: '酸菜鱼', emoji: '🐟', color: '#4CAF50' },
+  { name: '小龙虾', emoji: '🦞', color: '#FF4757' },
+  { name: '炸鸡', emoji: '🍗', color: '#FFA502' },
+  { name: '麻辣烫', emoji: '🌶️', color: '#E74C3C' },
+  { name: '寿司', emoji: '🍣', color: '#2ED573' },
+  { name: '披萨', emoji: '🍕', color: '#FF6348' },
+  { name: '汉堡', emoji: '🍔', color: '#E67E22' },
+  { name: '川菜', emoji: '🌶️', color: '#C0392B' },
+  { name: '粤菜', emoji: '🥟', color: '#27AE60' },
+  { name: '日料', emoji: '🍱', color: '#E84393' },
+  { name: '韩餐', emoji: '🍜', color: '#6C5CE7' },
+  { name: '甜品', emoji: '🍰', color: '#FD79A8' },
+  { name: '咖啡', emoji: '☕', color: '#8B4513' },
+  { name: '螺蛳粉', emoji: '🍜', color: '#A0522D' },
+  { name: '烤鸭', emoji: '🦆', color: '#CD5C1C' },
+  { name: '牛肉面', emoji: '🍜', color: '#8B0000' },
+  { name: '炒饭', emoji: '🍚', color: '#DAA520' },
+];
+
+const SEGMENT_COLORS = [
+  '#FF6B35', '#FF8C42', '#FFA05E', '#FFB87A',
+  '#E8F0FE', '#FFE0C0', '#FFD4A8', '#FFC890',
+  '#FFF0E0', '#FFE8D6', '#FFE0CC', '#FFD8C2',
+  '#FFD0B8', '#FFC8AE', '#FFC0A4', '#FFB89A',
+  '#FFB090', '#FFA886', '#FFA07C', '#FF9872',
+];
+
+let currentFoods = [];
+let isSpinning = false;
+let currentRotation = 0;
+let canvas, ctx;
+
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function getRandomFoods(count) {
+  const shuffled = shuffleArray([...MEITUAN_FOOD_BANK]);
+  return shuffled.slice(0, count).map((item, i) => ({
+    ...item,
+    color: SEGMENT_COLORS[i % SEGMENT_COLORS.length],
+  }));
+}
+
+function drawWheel(rotation) {
+  const w = canvas.width;
+  const h = canvas.height;
+  const cx = w / 2;
+  const cy = h / 2;
+  const r = Math.min(cx, cy) - 8;
+
+  ctx.clearRect(0, 0, w, h);
+
+  const n = currentFoods.length;
+  const arc = (2 * Math.PI) / n;
+
+  // Outer ring shadow
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r + 4, 0, 2 * Math.PI);
+  ctx.fillStyle = 'rgba(0,0,0,0.04)';
+  ctx.fill();
+  ctx.restore();
+
+  // Draw segments
+  for (let i = 0; i < n; i++) {
+    const startAngle = rotation + i * arc;
+    const endAngle = startAngle + arc;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, startAngle, endAngle);
+    ctx.closePath();
+
+    const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+    const baseColor = currentFoods[i].color;
+    gradient.addColorStop(0, lightenColor(baseColor, 30));
+    gradient.addColorStop(1, baseColor);
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+
+    // Draw text
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(startAngle + arc / 2);
+
+    const textR = r * 0.62;
+    ctx.fillStyle = '#333';
+    ctx.font = `bold ${Math.min(20, 280 / n)}px "PingFang SC", sans-serif`;
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(255,255,255,0.6)';
+    ctx.shadowBlur = 3;
+    ctx.fillText(currentFoods[i].name, textR, 0);
+
+    // Emoji
+    ctx.font = `${Math.min(24, 320 / n)}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.shadowBlur = 0;
+    const emojiR = r * 0.28;
+    ctx.fillText(currentFoods[i].emoji, emojiR, 0);
+
+    ctx.restore();
+  }
+
+  // Center circle decoration
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.12, 0, 2 * Math.PI);
+  const centerGrad = ctx.createRadialGradient(cx-4, cy-4, 0, cx, cy, r * 0.12);
+  centerGrad.addColorStop(0, '#FFFFFF');
+  centerGrad.addColorStop(1, '#FFE8D6');
+  ctx.fillStyle = centerGrad;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,106,0,0.15)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
+
+  // Outer ring
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r + 1, 0, 2 * Math.PI);
+  ctx.strokeStyle = 'rgba(255,106,0,0.08)';
+  ctx.lineWidth = 6;
+  ctx.stroke();
+  ctx.restore();
+}
+
+function lightenColor(hex, percent) {
+  const num = parseInt(hex.replace('#', ''), 16);
+  const amt = Math.round(2.55 * percent);
+  const R = Math.min(255, (num >> 16) + amt);
+  const G = Math.min(255, ((num >> 8) & 0x00FF) + amt);
+  const B = Math.min(255, (num & 0x0000FF) + amt);
+  return `rgb(${R},${G},${B})`;
+}
+
+function updateFoodList() {
+  const container = document.getElementById('foodList');
+  container.innerHTML = currentFoods.map((f, i) =>
+    `<span class="food-item" data-index="${i}"><span class="num">#${i + 1}</span>${f.emoji} ${f.name}</span>`
+  ).join('');
+}
+
+function highlightFood(index) {
+  document.querySelectorAll('.food-item').forEach(el => el.classList.remove('highlight'));
+  if (index >= 0) {
+    const el = document.querySelector(`.food-item[data-index="${index}"]`);
+    if (el) el.classList.add('highlight');
+  }
+}
+
+function initWheel() {
+  canvas = document.getElementById('wheelCanvas');
+  ctx = canvas.getContext('2d');
+  currentFoods = getRandomFoods(10);
+  updateFoodList();
+  drawWheel(0);
+}
+
+function spin() {
+  if (isSpinning) return;
+  isSpinning = true;
+  document.getElementById('spinBtn').disabled = true;
+
+  const n = currentFoods.length;
+  const arc = (2 * Math.PI) / n;
+
+  const targetIndex = Math.floor(Math.random() * n);
+  const targetAngle = (2 * Math.PI) - (targetIndex * arc) - (arc / 2);
+  const extraSpins = 4 + Math.floor(Math.random() * 4);
+  const totalRotation = extraSpins * 2 * Math.PI + targetAngle - (currentRotation % (2 * Math.PI));
+
+  const startRotation = currentRotation;
+  const endRotation = startRotation + totalRotation;
+  const duration = 4000 + Math.random() * 1500;
+  const startTime = performance.now();
+
+  function animate(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+
+    currentRotation = startRotation + totalRotation * eased;
+    drawWheel(currentRotation);
+
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      isSpinning = false;
+      document.getElementById('spinBtn').disabled = false;
+      currentRotation = endRotation;
+      showResult(targetIndex);
+    }
+  }
+
+  requestAnimationFrame(animate);
+}
+
+function showResult(index) {
+  const food = currentFoods[index];
+  document.getElementById('resultEmoji').textContent = food.emoji;
+  document.getElementById('resultName').textContent = food.name;
+  document.getElementById('modal').classList.add('show');
+  highlightFood(index);
+  launchConfetti();
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+}
+
+function launchConfetti() {
+  const container = document.getElementById('confettiContainer');
+  container.innerHTML = '';
+  const colors = ['#FF6A00', '#FF5000', '#FFD700', '#FF6B6B', '#48DBFB', '#FF9FF3', '#54A0FF'];
+  for (let i = 0; i < 50; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const size = 6 + Math.random() * 8;
+    const left = Math.random() * 100;
+    const delay = Math.random() * 1.5;
+    const duration = 2 + Math.random() * 2;
+    const shape = Math.random() > 0.5 ? '50%' : '2px';
+    piece.style.cssText = `
+      left: ${left}%;
+      width: ${size}px;
+      height: ${size}px;
+      background: ${color};
+      border-radius: ${shape};
+      animation-duration: ${duration}s;
+      animation-delay: ${delay}s;
+    `;
+    container.appendChild(piece);
+  }
+  setTimeout(() => container.innerHTML = '', 4000);
+}
+
+function refreshFoods() {
+  if (isSpinning) return;
+  const btn = document.getElementById('refreshBtn');
+  btn.classList.add('spinning');
+  currentFoods = getRandomFoods(10);
+  updateFoodList();
+  highlightFood(-1);
+
+  let rot = currentRotation;
+  const startTime = performance.now();
+  const duration = 400;
+
+  function fadeAnim(time) {
+    const progress = Math.min((time - startTime) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    drawWheel(rot + eased * 0.3);
+    if (progress < 1) {
+      requestAnimationFrame(fadeAnim);
+    } else {
+      drawWheel(rot);
+      btn.classList.remove('spinning');
+    }
+  }
+  requestAnimationFrame(fadeAnim);
+
+  document.getElementById('sourceText').textContent =
+    `已刷新热门美食推荐 ${new Date().toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'})}`;
+}
+
+document.addEventListener('DOMContentLoaded', initWheel);
+</script>
+</body>
+</html>
